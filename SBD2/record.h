@@ -4,7 +4,7 @@
 
 struct Record
 {
-	Record(long key, double v = UNINIT, double m = UNINIT); // v == UNINIT or m == UNINIT => uninitialized record
+	Record(int key, double v = UNINIT, double m = UNINIT); // v == UNINIT or m == UNINIT => uninitialized record
 	bool isInitialized() const;
 	double Energy() const;
 
@@ -14,7 +14,7 @@ struct Record
 	bool operator>=(const Record& record) const;
 	bool operator<=(const Record& record) const;
 
-	long key, ptr;
+	int key, ptr;
 	double v, m;
 
 	static constexpr double UNINIT = -1 * std::numeric_limits<double>::infinity();
