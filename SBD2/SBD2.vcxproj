@@ -117,6 +117,13 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="database.h" />
+    <ClInclude Include="file.h" />
+    <ClInclude Include="index.h" />
+    <ClInclude Include="page.h" />
+    <ClInclude Include="record.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
