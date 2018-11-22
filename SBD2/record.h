@@ -6,13 +6,6 @@ struct Record
 {
 	Record(int key, double v = UNINIT, double m = UNINIT); // v == UNINIT or m == UNINIT => uninitialized record
 	bool isInitialized() const;
-	double Energy() const;
-
-	bool operator==(const Record& record) const;
-	bool operator>(const Record& record) const;
-	bool operator<(const Record& record) const;
-	bool operator>=(const Record& record) const;
-	bool operator<=(const Record& record) const;
 
 	int key, ptr;
 	double v, m;

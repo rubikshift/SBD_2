@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include "file.h"
 
 struct IndexRecord
@@ -10,7 +11,7 @@ struct IndexRecord
 class Index
 {
 	public:
-		Index();
+		Index(std::string fileName, bool clear = true);
 		int GetPageId(int key);
 
 		static const unsigned int BUFFERED_PAGE_COUNT = 5;
@@ -19,5 +20,4 @@ class Index
 	private:
 		IndexRecord bufferedIndexes[BUFFER_SIZE];
 		File file;
-
 };

@@ -14,21 +14,22 @@ class File
 
 		void Open(const std::string& fileName, int mode = DEFAULT_INPUT_MODE);
 		void Close();
+		void ClearBuffer();
 		bool eof;
 	
 		void SwitchToReadMode();
 		void SwitchToWriteMode();
 
-		Page ReadPage(int pageId);
-		void WritePage(Page& page);
-	
-		unsigned int dummies;
-		unsigned int series;
+		bool ReadToBuffer(int pageId);
+		void WriteBuffer();
+
 	
 		static const auto DEFAULT_INPUT_MODE = std::ios::in | std::ios::binary;
 		static const auto DEFAULT_OUTPUT_MODE = std::ios::out | std::ios::binary | std::ios::trunc;
+		static const auto DEFAULT_INPUT_OUTPUT_MODE = std::ios::out | std::ios::in | std::ios::binary;
 	
 		std::string fileName;
+		Page buffer;
 
 	protected:
 		std::fstream file;

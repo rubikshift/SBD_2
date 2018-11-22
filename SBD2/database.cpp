@@ -1,41 +1,53 @@
 #include "database.h"
 
-void DataBase::Add(const Record & r)
+void DataBase::Insert(const Record & r)
 {
+	if (r.key < 0) // can not insert deleted record
+		return;
 	auto pageId = index.GetPageId(r.key);
-	auto page = file.ReadPage(pageId);
-	page = FollowPtrs(page, r.key);
-	auto record = FindRecord(page, r.key);
-	if (record.isInitialized())
-		return; // zaktualizuj rekord
-	AddRecord(page, r);
-	file.WritePage(page);
-}
+	file.ReadToBuffer(pageId);
+	auto record = FindRecord(r.key);
+	
+	//UPDATE RECORD
+	if (record->isInitialized() && r.key > 0) // r.key > 0 <=> can not update guard
+	{
+		record->key = r.key; //if record was tagged as deleted, remove tag
+		record->v = r.v;
+		record->m = r.m;
+		file.buffer.changed = true;
+	}
 
-void DataBase::Update(const Record & r)
-{
-	auto pageId = index.GetPageId(r.key);
-	auto page = file.ReadPage(pageId);
+	//INSERT NEW RECORD
+	else
+	{
 
-	file.WritePage(page);
+	}
+
+	file.WriteBuffer();
+	return;
 }
 
 void DataBase::Delete(int key)
 {
 	auto pageId = index.GetPageId(key);
-	auto page = file.ReadPage(pageId);
-	auto record = FindRecord(page, key);
-	if (!record.isInitialized())
+	file.ReadToBuffer(pageId);
+	auto record = FindRecord(key);
+	if (!record->isInitialized())
 		return;
-	record.key = -abs(record.key);
-	//zapisz strone ze zmodyfikowanym rekordem
-
-	file.WritePage(page);
+	record->key = -abs(record->key);
+	file.buffer.changed = true;
+	file.WriteBuffer();
 }
 
 Record DataBase::Get(int key)
 {
 	auto pageId = index.GetPageId(key);
-	auto page = file.ReadPage(pageId);
-	return FindRecord(page, key);
+	file.ReadToBuffer(pageId);
+	auto record = FindRecord(key);
+	return *record;
+}
+
+Record * DataBase::FindRecord(int key)
+{
+	return nullptr;
 }
