@@ -1,7 +1,7 @@
 #include <iomanip>
 #include "record.h"
 
-Record::Record(int key, double v, double m) : key(key), v(v), m(m), ptr(-1)
+Record::Record(int key, double v, double m) : key(key), v(v), m(m), ptr(NO_PTR)
 {
 }
 

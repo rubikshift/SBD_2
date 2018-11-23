@@ -1,5 +1,6 @@
 #pragma once
 #include "index.h"
+
 class DataBase
 {
 	public:
@@ -10,10 +11,12 @@ class DataBase
 		Record GetNext();
 		void Reorganize();
 
+		void Print();
+
 	private:
 		File file;
 		Index index;
 		Record* FindRecord(int key);
-};
 
-std::ostream& operator<<(std::ostream&, DataBase& db);
+		int overflowPtr;
+};

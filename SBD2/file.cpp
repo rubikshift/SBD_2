@@ -31,6 +31,8 @@ void File::WriteBuffer()
 	
 	file.seekp(buffer.id * Page::BYTE_SIZE, std::ios::beg);
 	file.write(buffer.data, Page::BYTE_SIZE);
+
+	buffer.changed = false;
 }
 
 File::File()
@@ -62,6 +64,7 @@ void File::Close()
 void File::ClearBuffer()
 {
 	auto ptr = (Record*)buffer.data;
+	buffer.id = -1;
 	buffer.changed = false;
 	for (int i = 0; i < Page::PAGE_SIZE; i++)
 		ptr[i] = {0, Record::UNINIT, Record::UNINIT };

@@ -11,6 +11,7 @@ struct Record
 	double v, m;
 
 	static constexpr double UNINIT = -1 * std::numeric_limits<double>::infinity();
+	static const int NO_PTR = -1;
 	static const unsigned int RECORD_SIZE = sizeof(v) + sizeof(m) + sizeof(key) + sizeof(ptr);
 
 };
