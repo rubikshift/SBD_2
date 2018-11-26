@@ -11,12 +11,11 @@ bool File::ReadToBuffer(int pageId)
 
 	buffer.changed = false;
 	file.seekg(pageId * Page::BYTE_SIZE, std::ios::beg);
-	if(!eof && file.read(buffer.data, Page::BYTE_SIZE))
+	if(file.read(buffer.data, Page::BYTE_SIZE))
 		buffer.id = pageId;
 	else
 	{
 		ClearBuffer();
-		eof = true;
 		return false;
 	}
 	return true;
@@ -26,7 +25,7 @@ void File::WriteBuffer()
 {
 	file.clear();
 
-	if (!buffer.changed) //in case that someone called WriteBuffer without making changes
+	if (!buffer.changed || buffer.id == -1) //in case that someone called WriteBuffer without making changes
 		return;
 	
 	file.seekp(buffer.id * Page::BYTE_SIZE, std::ios::beg);
@@ -51,6 +50,7 @@ File::~File()
 
 void File::Open(const std::string & fileName, int mode)
 {
+	buffer.id = -1;
 	this->fileName = fileName;
 	file.open(fileName, mode);
 }
@@ -67,7 +67,19 @@ void File::ClearBuffer()
 	buffer.id = -1;
 	buffer.changed = false;
 	for (int i = 0; i < Page::PAGE_SIZE; i++)
-		ptr[i] = {0, Record::UNINIT, Record::UNINIT };
+		ptr[i] = {-1, Record::UNINIT, Record::UNINIT };
+}
+
+void File::CreateSpace(int pages)
+{
+	file.seekp(std::ios::beg);
+	for (int i = 0; i < pages; i++)
+	{
+		ClearBuffer();
+		buffer.changed = true;
+		buffer.id = i;
+		WriteBuffer();
+	}
 }
 
 void File::SwitchToReadMode()

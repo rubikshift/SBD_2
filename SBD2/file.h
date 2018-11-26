@@ -15,7 +15,7 @@ class File
 		void Open(const std::string& fileName, int mode = DEFAULT_INPUT_MODE);
 		void Close();
 		void ClearBuffer();
-		bool eof;
+		void CreateSpace(int pages);
 	
 		void SwitchToReadMode();
 		void SwitchToWriteMode();

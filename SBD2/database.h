@@ -1,22 +1,26 @@
 #pragma once
 #include "index.h"
 
-class DataBase
+struct DataBase
 {
-	public:
-		DataBase(std::string indexFileName, std::string dbFileName, bool clear);
-		void Insert(const Record& r);
-		void Delete(int key);
-		Record Get(int key);
-		Record GetNext();
-		void Reorganize();
+	DataBase();
+	void Open(std::string indexFileName, std::string dbFileName, bool clear, int reservedPages = 1, bool tmp = false);
+	void Insert(Record r);
+	bool Delete(int key);
+	Record Get(int key);
+	//Record GetNext();
+	void Reorganize();
 
-		void Print();
+	void Print();
 
-	private:
-		File file;
-		Index index;
-		Record* FindRecord(int key);
+	File file;
+	Index index;
+	Record* FindRecord(int key);
 
-		int overflowPtr;
+	static constexpr const double o = 0.2; // overflowAreaSize = ceil(mainAreaSize * o)
+	static constexpr const double alfa = 0.5;
+
+	int mainAreaCount, overflowAreaCount;
+
+	int overflowPtr, overflowStart, overflowEnd, mainAreaSize;
 };

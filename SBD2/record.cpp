@@ -13,9 +13,9 @@ bool Record::isInitialized() const
 std::ostream & operator<<(std::ostream & os, const Record & record)
 {
 	//os << "Ek: " << std::setw(10) << std::left << std::setprecision(5) << record.Energy();
-	os << "Key: " << std::setw(10) << std::left << record.key;
+	os << "key: " << std::setw(10) << std::left << record.key;
 	os << "v: " << std::setw(10) << std::left << std::setprecision(5) << record.v;
 	os << "m: " << std::setw(10) << std::left << std::setprecision(5) << record.m;
-	os << "Key: " << std::setw(10) << std::left << record.ptr;
+	os << "ptr: " << std::setw(10) << std::left << record.ptr;
 	return os;
 }
