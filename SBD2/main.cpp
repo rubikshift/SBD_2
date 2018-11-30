@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include "database.h"
 
 void help()
@@ -39,10 +40,12 @@ int main()
 	//MAIN LOOP
 	while (true)
 	{
+		if (db.file.fileName != "")
+			std::cout << "$" << db.file.fileName << " ";
 		std::cout << ">> ";
 		std::cin >> command;
 
-		if (command == "insert")
+		if (command == "insert" || command == "i")
 		{
 			std::cin >> key;
 			std::cin >> v;
@@ -52,7 +55,7 @@ int main()
 
 			db.Insert(record);
 		}
-		else if (command == "get")
+		else if (command == "get" || command == "g")
 		{
 			std::cin >> key;
 			record = db.Get(key);
@@ -62,7 +65,7 @@ int main()
 			else
 				std::cout << "No record with given key" << std::endl;
 		}
-		else if (command == "delete")
+		else if (command == "delete" || command == "d")
 		{
 			std::cin >> key;
 
@@ -71,32 +74,38 @@ int main()
 			else
 				std::cout << "No record with given key" << std::endl;
 		}
-		else if (command == "print")
+		else if (command == "print" || command == "p")
 			db.Print();
 		else if (command == "reorganize")
-			;//db.Reogranize();
+			db.Reorganize();
 		else if (command == "random")
 		{
 
 		}
-		else if (command == "new")
+		else if (command == "new" || command == "n")
 		{
 			std::cin >> name;
-			db.Open(name + "_index", name + "_db", true);
+			db.Open(name + "_index", name + "_db", name + "_db_meta", true);
 		}
-		else if (command == "open")
+		else if (command == "open" || command == "o")
 		{
 			std::cin >> name;
-			db.Open(name + "_index", name + "_db", false);
+			db.Open(name + "_index", name + "_db", name + "_db_meta", false);
 		}
 		else if (command == "exit")
 			break;
-		else if (command == "help")
+		else if (command == "help" || command == "h")
 			help();
 		else
+		{
 			std::cout << "\nUNKNOWN COMMAND" << std::endl;
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		}
+
 		std::cout << std::endl;
 	}
 
+	db.GenerateMetadata(db.file.fileName + "_meta");
 	return 0;
 }

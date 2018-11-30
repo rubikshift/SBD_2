@@ -1,0 +1,57 @@
+>> 
+>> 0->0
+
+0
+	key: 0         v: 0         m: 0         ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+1
+	key: -1        v: -inf      m: -inf      ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+
+
+>> 
+>> 
+>> 
+>> 
+>> 
+>> 0->0
+4->1
+6->2
+
+0
+	key: 0         v: 0         m: 0         ptr: 96        
+	key: 30        v: 30        m: 30        ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+1
+	key: 3         v: 3         m: 3         ptr: 120       
+	key: 4         v: 4         m: 4         ptr: 144       
+	key: 5         v: 5         m: 5         ptr: 168       
+	key: 6         v: 6         m: 6         ptr: -1        
+
+
+>> 
+>> 
+>> 
+>> 
+>> 0->0
+4->1
+6->2
+
+0
+	key: 0         v: 0         m: 0         ptr: 96        
+	key: 30        v: 30        m: 30        ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+	key: -1        v: -inf      m: -inf      ptr: -1        
+1
+	key: 1         v: 1         m: 1         ptr: 120       
+	key: 2         v: 2         m: 2         ptr: 144       
+	key: 3         v: 3         m: 3         ptr: 168       
+	key: 4         v: 4         m: 4         ptr: 288       
+
+
+>> 

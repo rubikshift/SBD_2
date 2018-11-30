@@ -4,12 +4,16 @@
 struct DataBase
 {
 	DataBase();
-	void Open(std::string indexFileName, std::string dbFileName, bool clear, int reservedPages = 1, bool tmp = false);
+	void Open(std::string indexFileName, std::string dbFileName, std::string metadataFileName ,bool clear, int reservedPages = 1, bool tmp = false);
 	void Insert(Record r);
 	bool Delete(int key);
 	Record Get(int key);
-	//Record GetNext();
+	Record GetNext();
 	void Reorganize();
+
+	void GenerateMetadata(std::string fileName);
+	void ReadMetadata(std::string fileName);
+
 
 	void Print();
 

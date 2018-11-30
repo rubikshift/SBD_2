@@ -18,8 +18,8 @@ int Index::GetPageId(int key)
 	for (unsigned int i = 0; i < BUFFER_SIZE - 1; i++)
 		if (bufferedIndexes[i].key <= key &&
 			(bufferedIndexes[i + 1].key >= key || bufferedIndexes[i+1].key == IndexRecord::UNINIT))
-			return bufferedIndexes[i].key;
-	return bufferedIndexes[BUFFER_SIZE - 1].key;
+			return bufferedIndexes[i].pageId;
+	return bufferedIndexes[BUFFER_SIZE - 1].pageId;
 }
 
 void Index::Open(std::string fileName, bool clear)

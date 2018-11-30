@@ -25,7 +25,7 @@ struct Index
 	void AddIndexRecord(const IndexRecord& indexrecord);
 	void Save();
 
-	static const unsigned int BUFFERED_PAGE_COUNT = 5;
+	static const unsigned int BUFFERED_PAGE_COUNT = 10;
 	static const unsigned int BUFFER_SIZE = Page::BYTE_SIZE / IndexRecord::RECORD_SIZE * BUFFERED_PAGE_COUNT;
 
 	IndexRecord bufferedIndexes[BUFFER_SIZE];
