@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iomanip>
 #include <cmath>
 #include <algorithm>
 #include "database.h"
@@ -14,19 +15,19 @@ DataBase::DataBase() :
 {
 }
 
-void DataBase::Open(std::string indexFileName, std::string dbFileName, std::string metadataFileName, bool clear, int reservedPages, bool tmp)
+void DataBase::Open(std::string indexFileName, std::string dbFileName, std::string metadataFileName, bool clear, int* IOCounter, int reservedPages, bool tmp)
 {
 	
-	index.Open(indexFileName, clear);
+	index.Open(indexFileName, IOCounter, clear);
 
 	//CREATE NEW FILE
 	if (clear)
 	{
-		file.Open(dbFileName, File::DEFAULT_OUTPUT_MODE);
+		file.Open(dbFileName, IOCounter, File::DEFAULT_OUTPUT_MODE);
 		file.Close();
 	}
 	
-	file.Open(dbFileName, File::DEFAULT_INPUT_OUTPUT_MODE);
+	file.Open(dbFileName, IOCounter, File::DEFAULT_INPUT_OUTPUT_MODE);
 	
 	//INIT FILE
 	if (clear)
@@ -54,7 +55,7 @@ void DataBase::Insert(Record r)
 	auto ptr = (Record*)file.buffer.data;
 	auto pageId = index.GetPageId(r.key);
 	file.ReadToBuffer(pageId);
-	auto record = FindRecord(r.key);
+	auto record = SearchMainArea(r.key);
 	
 	//UPDATE RECORD MAIN AREA
 	if (record->isInitialized() && r.key > 0 && abs(record->key) == r.key) // r.key > 0 <=> can not update guard
@@ -77,17 +78,22 @@ void DataBase::Insert(Record r)
 	else if(r.key > 0) // r.key > 0 <=> can not insert new guard
 	{
 		int offset;
+		bool changedChain = false;
 
 		//FOLLOW PTRS
-		while (record->isInitialized() && abs(record->key) != r.key && record->ptr != Record::NO_PTR)
+		while (record->isInitialized() && abs(record->key) != r.key && record->ptr != Record::NO_PTR && !changedChain)
 		{
-			if (r.key < abs(record->key))
+			
+			if (abs(record->key) > r.key)
 			{
+				r.ptr = record->ptr;
 				std::swap(record->key, r.key);
-				std::swap(record->m, r.m);
-				std::swap(record->v, r.v);
-				file.buffer.changed = true;
+				std::swap(record->key, r.key);
+				std::swap(record->key, r.key);
+				changedChain = true;
+				break;
 			}
+
 			pageId = record->ptr / Page::BYTE_SIZE;
 			offset = (record->ptr % Page::BYTE_SIZE)/Record::RECORD_SIZE;
 			file.ReadToBuffer(pageId);
@@ -96,12 +102,6 @@ void DataBase::Insert(Record r)
 		
 		if (record->isInitialized() && abs(record->key) != r.key)
 		{
-			if (r.key < abs(record->key))
-			{
-				std::swap(record->key, r.key);
-				std::swap(record->m, r.m);
-				std::swap(record->v, r.v);
-			}
 			record->ptr = overflowPtr;
 			file.buffer.changed = true;
 			file.ReadToBuffer(overflowPtr / Page::BYTE_SIZE);
@@ -113,6 +113,7 @@ void DataBase::Insert(Record r)
 		record->key = r.key;
 		record->v = r.v;
 		record->m = r.m;
+		record->ptr = r.ptr;
 		file.buffer.changed = true;
 	}
 
@@ -133,7 +134,7 @@ bool DataBase::Delete(int key)
 	auto ptr = (Record*)file.buffer.data;
 	auto pageId = index.GetPageId(key);
 	file.ReadToBuffer(pageId);
-	auto record = FindRecord(key);
+	auto record = SearchMainArea(key);
 
 	int offset = 0;
 	while (record->isInitialized() && abs(record->key) != key && record->ptr != Record::NO_PTR)
@@ -162,9 +163,20 @@ bool DataBase::Delete(int key)
 
 Record DataBase::Get(int key)
 {
+	auto ptr = (Record*)file.buffer.data;
 	auto pageId = index.GetPageId(key);
 	file.ReadToBuffer(pageId);
-	auto record = FindRecord(key);
+	auto record = SearchMainArea(key);
+
+	int offset = 0;
+	while (record->isInitialized() && abs(record->key) != key && record->ptr != Record::NO_PTR)
+	{
+		pageId = record->ptr / Page::BYTE_SIZE;
+		offset = (record->ptr % Page::BYTE_SIZE) / Record::RECORD_SIZE;
+		file.ReadToBuffer(pageId);
+		record = ptr + offset;
+	}
+
 	return *record;
 }
 
@@ -223,8 +235,12 @@ void DataBase::Reorganize()
 {
 	DataBase tmp;
 	
+	std::cout << "\nREORGANIZE - START, IOCounter: " << *file.IOCounter << std::endl;
+
 	auto newSize = static_cast<int>(std::ceil((mainAreaCount + overflowAreaCount) / (Page::PAGE_SIZE * alfa)));
-	tmp.Open(index.file.fileName + "_tmp", file.fileName + "_tmp", file.fileName + "_meta" ,true, newSize, true);
+	tmp.Open(index.file.fileName + "_tmp", file.fileName + "_tmp", file.fileName + "_meta" ,true, file.IOCounter, newSize, true);
+
+	std::cout << "REORGANIZE - CREATED NEW DB, IOCounter: " << *file.IOCounter << std::endl;
 
 	auto ptr = (Record*)tmp.file.buffer.data;
 	int pageId = 0;
@@ -255,9 +271,12 @@ void DataBase::Reorganize()
 
 		record = GetNext();
 	}
+	std::cout << "REORGANIZE - COPIED OLD DB, IOCounter: " << *file.IOCounter << std::endl;
 	tmp.mainAreaCount = mainAreaCount + overflowAreaCount;
 	tmp.index.Save();
+	std::cout << "REORGANIZE - SAVED INDEX, IOCounter: " << *file.IOCounter << std::endl;
 	tmp.GenerateMetadata(file.fileName + "_meta");
+	std::cout << "REORGANIZE - GENERATED METADATA, IOCounter: " << *file.IOCounter << std::endl;
 
 	tmp.file.Close();
 	tmp.index.file.Close();
@@ -269,12 +288,24 @@ void DataBase::Reorganize()
 	std::rename(tmp.index.file.fileName.c_str(), index.file.fileName.c_str());
 	std::rename(tmp.file.fileName.c_str(), file.fileName.c_str());
 
-	Open(index.file.fileName, file.fileName, file.fileName + "_meta", false);
+	Open(index.file.fileName, file.fileName, file.fileName + "_meta", false, file.IOCounter);
+	std::cout << "REORGANIZE - RENAMED AND REOPENED DB, IOCounter: " << *file.IOCounter << std::endl;
+}
+
+void DataBase::Info()
+{
+	std::cout << "\nName: " << file.fileName << "\n"
+		<< "Main area size: " << mainAreaSize << "\n"
+		<< "Overflow area size: " << (overflowEnd - overflowStart) / Page::BYTE_SIZE << "\n"
+		<< "Overflow free ptr: " << overflowPtr << "\n"
+		<< "Records in main area: " << mainAreaCount << "\n"
+		<< "Records in overflow: " << overflowAreaCount << "\n"
+		<< "BufferPageId: " << file.buffer.id << std::endl;
 }
 
 void DataBase::GenerateMetadata(std::string fileName)
 {
-	File metadata(fileName, File::DEFAULT_OUTPUT_MODE);
+	File metadata(fileName, file.IOCounter, File::DEFAULT_OUTPUT_MODE);
 	auto ptr = (int*)metadata.buffer.data;
 	metadata.buffer.id = 0;
 	metadata.buffer.changed = true;
@@ -291,7 +322,7 @@ void DataBase::GenerateMetadata(std::string fileName)
 
 void DataBase::ReadMetadata(std::string fileName)
 {
-	File metadata(fileName, File::DEFAULT_INPUT_MODE);
+	File metadata(fileName, file.IOCounter, File::DEFAULT_INPUT_MODE);
 	metadata.ReadToBuffer(0);
 	auto ptr = (int*)metadata.buffer.data;
 
@@ -308,20 +339,26 @@ void DataBase::Print()
 	int pageId = 0;
 	auto ptr = (Record*)file.buffer.data;
 
-	std::cout << index << std::endl;
+	int overflowFirstPage = overflowStart / Page::BYTE_SIZE;
 
+	std::cout << index << std::endl;
+	std::cout << "File: " << std::endl;
 	while (file.ReadToBuffer(pageId))
 	{
-		std::cout << pageId << std::endl;
+		std::cout << "\tPAGE " << std::setw(5) << std::left << pageId;
+		if (pageId < overflowFirstPage)
+			 std::cout << std::setw(70) << std::setfill('#') << std::right << " MAIN";
+		else
+			std::cout << std::setw(70) << std::setfill('#') << std::right << " OVERFLOW";
+		std::cout << "" << std::setfill(' ') << std::endl;
+		
 		for (int i = 0; i < Page::PAGE_SIZE; i++)
-			std::cout << "\t" << ptr[i] << std::endl;
+			std::cout << "\t\t" << std::setw(5) << std::right << i << ". " << ptr[i] << std::endl;
 		pageId++;
 	}
-
-	std::cout << std::endl;
 }
 
-Record * DataBase::FindRecord(int key)
+Record * DataBase::SearchMainArea(int key)
 {
 	auto ptr = (Record*)file.buffer.data;
 	Record* record = nullptr;

@@ -19,7 +19,7 @@ struct Index
 	~Index();
 
 	int GetPageId(int key);
-	void Open(std::string fileName, bool clear);
+	void Open(std::string fileName, int* IOCounter, bool clear);
 
 	void ClearBufferedIndexes();
 	void AddIndexRecord(const IndexRecord& indexrecord);

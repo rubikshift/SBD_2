@@ -11,8 +11,11 @@ bool File::ReadToBuffer(int pageId)
 
 	buffer.changed = false;
 	file.seekg(pageId * Page::BYTE_SIZE, std::ios::beg);
-	if(file.read(buffer.data, Page::BYTE_SIZE))
+	if (file.read(buffer.data, Page::BYTE_SIZE))
+	{
 		buffer.id = pageId;
+		(*IOCounter)++;
+	}
 	else
 	{
 		ClearBuffer();
@@ -30,6 +33,7 @@ void File::WriteBuffer()
 	
 	file.seekp(buffer.id * Page::BYTE_SIZE, std::ios::beg);
 	file.write(buffer.data, Page::BYTE_SIZE);
+	(*IOCounter)++;
 
 	buffer.changed = false;
 }
@@ -38,9 +42,9 @@ File::File()
 {
 }
 
-File::File(const std::string & fileName, int mode)
+File::File(const std::string & fileName, int* IOCounter, int mode)
 {
-	Open(fileName, mode);
+	Open(fileName, IOCounter, mode);
 }
 
 File::~File()
@@ -48,10 +52,11 @@ File::~File()
 	Close();
 }
 
-void File::Open(const std::string & fileName, int mode)
+void File::Open(const std::string & fileName, int* IOCounter, int mode)
 {
 	buffer.id = -1;
 	this->fileName = fileName;
+	this->IOCounter = IOCounter;
 	file.open(fileName, mode);
 }
 

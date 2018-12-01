@@ -9,10 +9,10 @@ class File
 {
 	public:
 		File();
-		File(const std::string& fileName, int mode = DEFAULT_INPUT_MODE);
+		File(const std::string& fileName, int* IOCounter, int mode = DEFAULT_INPUT_MODE);
 		~File();
 
-		void Open(const std::string& fileName, int mode = DEFAULT_INPUT_MODE);
+		void Open(const std::string& fileName, int* IOCounter, int mode = DEFAULT_INPUT_MODE);
 		void Close();
 		void ClearBuffer();
 		void CreateSpace(int pages);
@@ -30,6 +30,7 @@ class File
 	
 		std::string fileName;
 		Page buffer;
+		int* IOCounter;
 
 	protected:
 		std::fstream file;
