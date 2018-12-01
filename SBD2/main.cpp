@@ -53,7 +53,7 @@ int main()
 	double m, v;
 	int key;
 
-	srand(std::time(nullptr));
+	srand(static_cast<unsigned int>(std::time(nullptr)));
 
 	//MAIN LOOP
 	while (true)
