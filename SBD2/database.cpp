@@ -60,6 +60,8 @@ void DataBase::Insert(Record r)
 	//UPDATE RECORD MAIN AREA
 	if (record->isInitialized() && r.key > 0 && abs(record->key) == r.key) // r.key > 0 <=> can not update guard
 	{
+		if (record->key < 0)
+			mainAreaCount++;
 		record->key = r.key; //if record was tagged as deleted, remove tag
 		record->v = r.v;
 		record->m = r.m;
@@ -109,7 +111,8 @@ void DataBase::Insert(Record r)
 			overflowPtr += Record::RECORD_SIZE;
 			overflowAreaCount++;
 		}
-
+		if (record->isInitialized() && record->key < 0)
+			overflowAreaCount++;
 		record->key = r.key;
 		record->v = r.v;
 		record->m = r.m;

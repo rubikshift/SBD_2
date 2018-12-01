@@ -4,7 +4,6 @@
 
 Index::Index() : file(), pos(0)
 {
-	ClearBufferedIndexes();
 }
 
 Index::~Index()
@@ -25,6 +24,8 @@ int Index::GetPageId(int key)
 
 void Index::Open(std::string fileName, int* IOCounter, bool clear)
 {
+	ClearBufferedIndexes();
+
 	auto mode = clear ? File::DEFAULT_OUTPUT_MODE : File::DEFAULT_INPUT_MODE;
 	file.Open(fileName, IOCounter, mode);
 

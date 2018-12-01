@@ -90,7 +90,7 @@ int main()
 			std::cout << "\n";
 			do {
 				record = db.GetNext();
-				if (record.isInitialized())
+				if (record.isInitialized() && record.key > 0)
 					std::cout << record << std::endl;
 			} while (record.isInitialized());
 		}
