@@ -10,7 +10,7 @@ DataBase::DataBase() :
 	overflowPtr(Record::NO_PTR), 
 	overflowStart(Record::NO_PTR), 
 	overflowEnd(Record::NO_PTR),
-	mainAreaCount(0),
+	primaryAreaCount(0),
 	overflowAreaCount(0)
 {
 }
@@ -32,8 +32,8 @@ void DataBase::Open(std::string indexFileName, std::string dbFileName, std::stri
 	//INIT FILE
 	if (clear)
 	{
-		mainAreaSize = reservedPages;
-		int overflowAreaSize = static_cast<int>(std::ceil(mainAreaSize * o));
+		primaryAreaSize = reservedPages;
+		int overflowAreaSize = static_cast<int>(std::ceil(primaryAreaSize * o));
 		file.CreateSpace(reservedPages + overflowAreaSize);
 		overflowPtr = overflowStart = reservedPages * Page::BYTE_SIZE;
 		overflowEnd = (reservedPages + overflowAreaSize) * Page::BYTE_SIZE;
@@ -61,7 +61,7 @@ void DataBase::Insert(Record r)
 	if (record->isInitialized() && r.key > 0 && abs(record->key) == r.key) // r.key > 0 <=> can not update guard
 	{
 		if (record->key < 0)
-			mainAreaCount++;
+			primaryAreaCount++;
 		record->key = r.key; //if record was tagged as deleted, remove tag
 		record->v = r.v;
 		record->m = r.m;
@@ -73,7 +73,7 @@ void DataBase::Insert(Record r)
 		record->key = r.key;
 		record->v = r.v;
 		record->m = r.m;
-		mainAreaCount++;
+		primaryAreaCount++;
 	}
 
 	//UPDATE OR INSERT NEW RECORD (overflow area)
@@ -153,7 +153,7 @@ bool DataBase::Delete(int key)
 		return false;
 
 	if (mainArea)
-		mainAreaCount--;
+		primaryAreaCount--;
 	else
 		overflowAreaCount--;
 
@@ -191,7 +191,7 @@ Record DataBase::GetNext()
 	auto ptr = (Record*)file.buffer.data;
 	Record record;
 
-	if (pageId == mainAreaSize)
+	if (pageId == primaryAreaSize)
 	{
 		offset = pageId = overflowPageId = overflowOffset = 0;
 		readOverflow = false;
@@ -240,7 +240,7 @@ void DataBase::Reorganize()
 	
 	std::cout << "\nREORGANIZE - START, IOCounter: " << *file.IOCounter << std::endl;
 
-	auto newSize = static_cast<int>(std::ceil((mainAreaCount + overflowAreaCount) / (Page::PAGE_SIZE * alfa)));
+	auto newSize = static_cast<int>(std::ceil((primaryAreaCount + overflowAreaCount) / (Page::PAGE_SIZE * alfa)));
 	tmp.Open(index.file.fileName + "_tmp", file.fileName + "_tmp", file.fileName + "_meta" ,true, file.IOCounter, newSize, true);
 
 	std::cout << "REORGANIZE - CREATED NEW DB, IOCounter: " << *file.IOCounter << std::endl;
@@ -275,7 +275,7 @@ void DataBase::Reorganize()
 		record = GetNext();
 	}
 	std::cout << "REORGANIZE - COPIED OLD DB, IOCounter: " << *file.IOCounter << std::endl;
-	tmp.mainAreaCount = mainAreaCount + overflowAreaCount;
+	tmp.primaryAreaCount = primaryAreaCount + overflowAreaCount;
 	tmp.index.Save();
 	std::cout << "REORGANIZE - SAVED INDEX, IOCounter: " << *file.IOCounter << std::endl;
 	tmp.GenerateMetadata(file.fileName + "_meta");
@@ -298,10 +298,10 @@ void DataBase::Reorganize()
 void DataBase::Info()
 {
 	std::cout << "\nName: " << file.fileName << "\n"
-		<< "Main area size: " << mainAreaSize << "\n"
+		<< "Primary area size: " << primaryAreaSize << "\n"
 		<< "Overflow area size: " << (overflowEnd - overflowStart) / Page::BYTE_SIZE << "\n"
 		<< "Overflow free ptr: " << overflowPtr << "\n"
-		<< "Records in main area: " << mainAreaCount << "\n"
+		<< "Records in main area: " << primaryAreaCount << "\n"
 		<< "Records in overflow: " << overflowAreaCount << "\n"
 		<< "BufferPageId: " << file.buffer.id << std::endl;
 }
@@ -313,12 +313,12 @@ void DataBase::GenerateMetadata(std::string fileName)
 	metadata.buffer.id = 0;
 	metadata.buffer.changed = true;
 
-	ptr[0] = mainAreaCount;
+	ptr[0] = primaryAreaCount;
 	ptr[1] = overflowAreaCount;
 	ptr[2] = overflowPtr;
 	ptr[3] = overflowStart;
 	ptr[4] = overflowEnd;
-	ptr[5] = mainAreaSize;
+	ptr[5] = primaryAreaSize;
 
 	metadata.WriteBuffer();
 }
@@ -329,12 +329,12 @@ void DataBase::ReadMetadata(std::string fileName)
 	metadata.ReadToBuffer(0);
 	auto ptr = (int*)metadata.buffer.data;
 
-	mainAreaCount = ptr[0];
+	primaryAreaCount = ptr[0];
 	overflowAreaCount = ptr[1];
 	overflowPtr = ptr[2];
 	overflowStart = ptr[3];
 	overflowEnd = ptr[4];
-	mainAreaSize = ptr[5];
+	primaryAreaSize = ptr[5];
 }
 
 void DataBase::Print()
@@ -350,7 +350,7 @@ void DataBase::Print()
 	{
 		std::cout << "\tPAGE " << std::setw(5) << std::left << pageId;
 		if (pageId < overflowFirstPage)
-			 std::cout << std::setw(70) << std::setfill('#') << std::right << " MAIN";
+			 std::cout << std::setw(70) << std::setfill('#') << std::right << " PRIMARY";
 		else
 			std::cout << std::setw(70) << std::setfill('#') << std::right << " OVERFLOW";
 		std::cout << "" << std::setfill(' ') << std::endl;

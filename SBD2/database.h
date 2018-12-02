@@ -22,10 +22,10 @@ struct DataBase
 	Index index;
 	Record* SearchMainArea(int key);
 
-	static constexpr const double o = 0.2; // overflowAreaSize = ceil(mainAreaSize * o)
+	static constexpr const double o = 0.2; // overflowAreaSize = ceil(primaryAreaSize * o)
 	static constexpr const double alfa = 0.5;
 
-	int mainAreaCount, overflowAreaCount;
+	int primaryAreaCount, overflowAreaCount;
 
-	int overflowPtr, overflowStart, overflowEnd, mainAreaSize;
+	int overflowPtr, overflowStart, overflowEnd, primaryAreaSize;
 };
