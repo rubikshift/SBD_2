@@ -70,7 +70,7 @@ int main()
 			std::cin >> m;
 
 			record = { key, v, m };
-			std::cout << record << std::endl;
+			std::cout << "\n" << record << std::endl;
 			db.Insert(record);
 		}
 		else if (command == "info")
@@ -114,7 +114,7 @@ int main()
 			m = (rand() % 10000 + 1) / 100.0;
 			v = (rand() % 10000 + 1) / 100.0;
 			record = { key, v, m };
-			std::cout << record << std::endl;
+			std::cout << "\n" << record << std::endl;
 			db.Insert(record);
 		}
 		else if (command == "new" || command == "n")
