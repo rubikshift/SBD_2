@@ -90,8 +90,8 @@ void DataBase::Insert(Record r)
 			{
 				r.ptr = record->ptr;
 				std::swap(record->key, r.key);
-				std::swap(record->key, r.key);
-				std::swap(record->key, r.key);
+				std::swap(record->m, r.m);
+				std::swap(record->v, r.v);
 				changedChain = true;
 				break;
 			}
@@ -105,6 +105,12 @@ void DataBase::Insert(Record r)
 		if (record->isInitialized() && abs(record->key) != r.key)
 		{
 			record->ptr = overflowPtr;
+			if (abs(record->key) > r.key)
+			{
+				std::swap(record->key, r.key);
+				std::swap(record->m, r.m);
+				std::swap(record->v, r.v);
+			}
 			file.buffer.changed = true;
 			file.ReadToBuffer(overflowPtr / Page::BYTE_SIZE);
 			record = ptr + (overflowPtr % Page::BYTE_SIZE) / Record::RECORD_SIZE;
